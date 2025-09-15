@@ -7,7 +7,7 @@ WORKDIR /app
 RUN npm install -g pnpm@8.15.1
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 
 # Install dependencies
@@ -31,7 +31,7 @@ RUN npm install -g pnpm@8.15.1 && \
 
 # Copy package files for production dependencies
 COPY apps/api/package.json ./
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install only production dependencies
 RUN pnpm install --prod --frozen-lockfile --filter=@quickstart-tma/api
