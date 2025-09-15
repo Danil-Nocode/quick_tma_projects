@@ -1,0 +1,24 @@
+# Development Dockerfile for API
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install pnpm and development tools
+RUN npm install -g pnpm@8.15.1
+
+# Install dependencies
+COPY package.json pnpm-lock.yaml ./
+COPY apps/api/package.json ./apps/api/
+RUN pnpm install
+
+# Copy source code
+COPY apps/api ./apps/api
+
+# Set working directory to API
+WORKDIR /app/apps/api
+
+# Expose port
+EXPOSE 3001
+
+# Start development server with hot reload
+CMD ["pnpm", "dev"]

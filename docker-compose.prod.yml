@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # Nginx reverse proxy and static file server
+  nginx:
+    image: nginx:alpine
+    container_name: tma-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/ssl:/etc/nginx/ssl:ro
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      - api
+      - web
+    networks:
+      - tma-network
+    environment:
+      - API_DOMAIN=${API_DOMAIN}
+      - APP_DOMAIN=${APP_DOMAIN}
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API service (Telegram bot + API)
+  api:
+    image: ${REGISTRY}/${PROJECT_SLUG}/api:latest
+    container_name: tma-api
+    restart: unless-stopped
+    expose:
+      - "3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - BOT_TOKEN=${BOT_TOKEN}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - WEBHOOK_URL=https://${API_DOMAIN}/webhook
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - API_DOMAIN=${API_DOMAIN}
+      - APP_DOMAIN=${APP_DOMAIN}
+    networks:
+      - tma-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Web application (React Mini App)
+  web:
+    image: ${REGISTRY}/${PROJECT_SLUG}/web:latest
+    container_name: tma-web
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - VITE_API_DOMAIN=${API_DOMAIN}
+    networks:
+      - tma-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  tma-network:
+    driver: bridge
+    name: tma-network
+
+volumes:
+  nginx-ssl:
+    driver: local

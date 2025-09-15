@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # API service for development
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: tma-api-dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/package.json:/app/apps/api/package.json
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - BOT_TOKEN=${BOT_TOKEN}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - API_DOMAIN=${API_DOMAIN:-localhost:3001}
+      - APP_DOMAIN=${APP_DOMAIN:-localhost:3000}
+    networks:
+      - tma-dev-network
+    depends_on:
+      - redis
+
+  # Web application for development
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: tma-web-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/public:/app/apps/web/public
+      - ./apps/web/package.json:/app/apps/web/package.json
+      - /app/node_modules
+      - /app/apps/web/node_modules
+    environment:
+      - VITE_API_DOMAIN=${API_DOMAIN:-localhost:3001}
+    networks:
+      - tma-dev-network
+    stdin_open: true
+    tty: true
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: tma-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - tma-dev-network
+    command: redis-server --appendonly yes
+
+networks:
+  tma-dev-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
