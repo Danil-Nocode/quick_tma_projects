@@ -17,8 +17,8 @@ RUN pnpm install --frozen-lockfile
 COPY apps/api ./apps/api
 
 # Build the application
-WORKDIR /app/apps/api
-RUN pnpm build
+WORKDIR /app
+RUN pnpm --filter=@quickstart-tma/api build
 
 # Production stage
 FROM node:18-alpine AS runner
@@ -34,7 +34,7 @@ COPY apps/api/package.json ./
 COPY package.json pnpm-lock.yaml ./
 
 # Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile --filter=api
+RUN pnpm install --prod --frozen-lockfile --filter=@quickstart-tma/api
 
 # Copy built application
 COPY --from=builder /app/apps/api/dist ./dist
