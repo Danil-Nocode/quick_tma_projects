@@ -24,7 +24,6 @@ jobs:
     - name: Login to Container Registry
       uses: docker/login-action@v3
       with:
-        registry: ${{ env.REGISTRY }}
         username: ${{ secrets.REGISTRY_USER }}
         password: ${{ secrets.REGISTRY_TOKEN }}
         
@@ -32,7 +31,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}
+        images: ${{ secrets.REGISTRY_USER }}/${{ env.PROJECT_SLUG }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -45,7 +44,7 @@ jobs:
         context: .
         file: ./apps/api/Dockerfile
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-api:${{ github.sha }},${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-api:latest
+        tags: ${{ secrets.REGISTRY_USER }}/${{ env.PROJECT_SLUG }}-api:${{ github.sha }},${{ secrets.REGISTRY_USER }}/${{ env.PROJECT_SLUG }}-api:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
@@ -55,7 +54,7 @@ jobs:
         context: .
         file: ./apps/web/Dockerfile
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-web:${{ github.sha }},${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-web:latest
+        tags: ${{ secrets.REGISTRY_USER }}/${{ env.PROJECT_SLUG }}-web:${{ github.sha }},${{ secrets.REGISTRY_USER }}/${{ env.PROJECT_SLUG }}-web:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -82,9 +81,9 @@ jobs:
           cd /opt/${{ secrets.PROJECT_SLUG }}
           
           # Pull latest images
-          docker login ${{ secrets.REGISTRY }} -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY_TOKEN }}
-          docker pull ${{ secrets.REGISTRY }}/${{ secrets.PROJECT_SLUG }}-api:latest
-          docker pull ${{ secrets.REGISTRY }}/${{ secrets.PROJECT_SLUG }}-web:latest
+          docker login -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY_TOKEN }}
+          docker pull ${{ secrets.REGISTRY_USER }}/${{ secrets.PROJECT_SLUG }}-api:latest
+          docker pull ${{ secrets.REGISTRY_USER }}/${{ secrets.PROJECT_SLUG }}-web:latest
           
           # Update and restart services
           docker compose -f docker-compose.prod.yml down
