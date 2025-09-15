@@ -29,11 +29,12 @@ WORKDIR /app
 RUN npm install -g pnpm@8.15.1 && \
     apk add --no-cache dumb-init
 
-# Copy package files
+# Copy package files for production dependencies
 COPY apps/api/package.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --filter=api
 
 # Copy built application
 COPY --from=builder /app/apps/api/dist ./dist

@@ -42,7 +42,8 @@ jobs:
     - name: Build and push API image
       uses: docker/build-push-action@v5
       with:
-        context: ./apps/api
+        context: .
+        file: ./apps/api/Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-api:${{ github.sha }},${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-api:latest
         cache-from: type=gha
@@ -51,7 +52,8 @@ jobs:
     - name: Build and push Web image
       uses: docker/build-push-action@v5
       with:
-        context: ./apps/web
+        context: .
+        file: ./apps/web/Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-web:${{ github.sha }},${{ env.REGISTRY }}/${{ env.PROJECT_SLUG }}-web:latest
         cache-from: type=gha
