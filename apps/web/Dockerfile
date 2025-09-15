@@ -34,10 +34,6 @@ COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built application
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
-# Add nginx user
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S nginx -u 1001
-
 # Set permissions
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
