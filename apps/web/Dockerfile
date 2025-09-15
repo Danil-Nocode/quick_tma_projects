@@ -7,7 +7,7 @@ WORKDIR /app
 RUN npm install -g pnpm@8.15.1
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 
 # Install dependencies
@@ -17,10 +17,10 @@ RUN pnpm install --frozen-lockfile
 COPY apps/web ./apps/web
 
 # Build the application
-WORKDIR /app/apps/web
+WORKDIR /app
 ARG VITE_API_DOMAIN
 ENV VITE_API_DOMAIN=$VITE_API_DOMAIN
-RUN pnpm build
+RUN pnpm --filter=@quickstart-tma/web build
 
 # Production stage with Nginx
 FROM nginx:alpine AS runner
